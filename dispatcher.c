@@ -65,8 +65,8 @@ void pdelete(Process *toBeDeleted) {
   		int* tmpName = (int*)elem;
   		free(tmpName);
   	}
+    freeList(toBeDeleted->exchanges);
   }
-  freeList(toBeDeleted->exchanges);
   free(toBeDeleted);
   return;
 }
