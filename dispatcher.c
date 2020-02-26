@@ -55,6 +55,9 @@ void dummydelete(void *toBeDeleted) {
 }
 
 void pdelete(Process *toBeDeleted) {
+  if (toBeDeleted == NULL) {
+    return;
+  }
   void *elem;
   if(toBeDeleted->exchanges != NULL) {
     ListIterator iter = createIterator(toBeDeleted->exchanges);
