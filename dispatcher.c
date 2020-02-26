@@ -196,6 +196,7 @@ void dispatcher(FILE *fd, int harddrive){
   Process *p0 = malloc(sizeof(Process));
   p0->process_id = 0;
   p0->t_runtime = 0;
+  p0->exchanges = NULL;
   p0->run_time = -1;
 
   cpu *pcpu = malloc(sizeof(cpu));
