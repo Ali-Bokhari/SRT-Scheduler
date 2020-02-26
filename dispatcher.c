@@ -54,17 +54,25 @@ void dummydelete(void *toBeDeleted) {
   return;
 }
 
+void intdelete(void *toBeDeleted) {
+  if (toBeDeleted != NULL) {
+    int* tobe = (int*)toBeDeleted;
+    free(tobe);
+  }
+}
+
 void pdelete(Process *toBeDeleted) {
   if (toBeDeleted == NULL) {
     return;
   }
-  void *elem;
+  //void *elem;
   if(toBeDeleted->exchanges != NULL) {
-    ListIterator iter = createIterator(toBeDeleted->exchanges);
-  	while ((elem = nextElement(&iter)) != NULL){
-  		int* tmpName = (int*)elem;
-  		free(tmpName);
-  	}
+    // ListIterator iter = createIterator(toBeDeleted->exchanges);
+  	// while ((elem = nextElement(&iter)) != NULL){
+  	// 	int* tmpName = (int*)elem;
+    //   printf("freed %d\n", *tmpName);
+  	// 	free(tmpName);
+  	// }
     freeList(toBeDeleted->exchanges);
   }
   free(toBeDeleted);
@@ -145,7 +153,7 @@ void dispatcher(FILE *fd, int harddrive){
     //Process simulation input line by line
     while (fgets(line_buffer, MAX_LINE_LENGTH, fd) != NULL && line_buffer[0] != '\n'){
       Process *newp = malloc(sizeof(Process));
-      newp->exchanges = initializeList(dummyprint, dummydelete, intCmp);
+      newp->exchanges = initializeList(dummyprint, intdelete, intCmp);
       newp->t_runtime = 0;
       newp->t_readytime = 0;
       newp->t_blockedtime = 0;
@@ -175,21 +183,23 @@ void dispatcher(FILE *fd, int harddrive){
      insertBack(new_queue, newp);
   }
 
-  //void *elem, *elem2;
-
-	// ListIterator iter = createIterator(new_queue);
-	// while ((elem = nextElement(&iter)) != NULL){
-	// 	Process* tmpName = (Process*)elem;
-	// 	printf("%d %d %d %d", tmpName->start_time, tmpName->process_id, tmpName->run_time, tmpName->num_exchanges);
-  //     ListIterator iter2 = createIterator(tmpName->exchanges);
-  //     while((elem2 = nextElement(&iter2)) != NULL) {
-  //       int* tmpName2 = (int*)elem2;
-  //       printf(" %d", *tmpName2);
-  //     }
-  //     printf("\n");
-	// }
   void *elem;
   ListIterator iter;
+
+  void *elem2;
+
+	iter = createIterator(new_queue);
+	while ((elem = nextElement(&iter)) != NULL){
+		Process* tmpName = (Process*)elem;
+		printf("%d %d %d %d", tmpName->start_time, tmpName->process_id, tmpName->run_time, tmpName->num_exchanges);
+      ListIterator iter2 = createIterator(tmpName->exchanges);
+      while((elem2 = nextElement(&iter2)) != NULL) {
+        int* tmpName2 = (int*)elem2;
+        printf(" %d", *tmpName2);
+      }
+      printf("\n");
+	}
+
 
   int newsize = getLength(new_queue);
 
