@@ -66,6 +66,7 @@ void pdelete(Process *toBeDeleted) {
   		free(tmpName);
   	}
   }
+  freeList(toBeDeleted->exchanges);
   free(toBeDeleted);
   return;
 }
