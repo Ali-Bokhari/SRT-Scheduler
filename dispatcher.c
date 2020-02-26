@@ -212,7 +212,7 @@ void dispatcher(FILE *fd, int harddrive){
   int *tmpi;
 
   //Main simuation loop
-  for (int time = 0; getLength(finished) != newsize; time++) {
+  for (int time = 0; getLength(finished) != newsize && time < 2147483647; time++) {
 
     //handle if harddrive request complete
     if (phdd->p != NULL && phdd->time == harddrive) {
@@ -231,7 +231,7 @@ void dispatcher(FILE *fd, int harddrive){
       phdd->p = NULL;
     }
 
-
+    //check if process is finished or its time for a hardrive request
     if(pcpu->p->process_id != 0) {
       if ((tmpi = getFromFront(pcpu->p->exchanges)) != NULL && (pcpu->p->t_runtime) == *tmpi) {
         //pcpu->p->t_runtime += pcpu->time;
@@ -264,6 +264,7 @@ void dispatcher(FILE *fd, int harddrive){
       }
     }
 
+    //check for any new process in the new queue
     if ((tmpp = getFromFront(new_queue)) != NULL) {
       if (tmpp->start_time == time) {
         if (pcpu->p->process_id == 0) {
@@ -284,6 +285,8 @@ void dispatcher(FILE *fd, int harddrive){
         deleteDataFromList(new_queue, tmpp);
       }
     }
+
+    //Check if anything needs to be moved to hardrive request
     if (phdd->p == NULL) {
       if ((tmpp = getFromFront(blocked_queue)) != NULL) {
         phdd->p = tmpp;
@@ -292,6 +295,7 @@ void dispatcher(FILE *fd, int harddrive){
       }
     }
 
+    //increment all time
     pcpu->time ++;
     if (pcpu->p->run_time == 0) {
       (pcpu->p->run_time)++;
