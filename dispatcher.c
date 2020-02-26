@@ -306,6 +306,8 @@ void dispatcher(FILE *fd, int harddrive){
     pdelete(tmpName);
 	}
 
+  free(pcpu);
+  free(phdd);
   freeList(new_queue);
   freeList(ready_queue);
   freeList(blocked_queue);
