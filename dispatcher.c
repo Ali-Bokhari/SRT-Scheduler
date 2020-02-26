@@ -186,19 +186,19 @@ void dispatcher(FILE *fd, int harddrive){
   void *elem;
   ListIterator iter;
 
-  void *elem2;
-
-	iter = createIterator(new_queue);
-	while ((elem = nextElement(&iter)) != NULL){
-		Process* tmpName = (Process*)elem;
-		printf("%d %d %d %d", tmpName->start_time, tmpName->process_id, tmpName->run_time, tmpName->num_exchanges);
-      ListIterator iter2 = createIterator(tmpName->exchanges);
-      while((elem2 = nextElement(&iter2)) != NULL) {
-        int* tmpName2 = (int*)elem2;
-        printf(" %d", *tmpName2);
-      }
-      printf("\n");
-	}
+  // void *elem2;
+  //
+	// iter = createIterator(new_queue);
+	// while ((elem = nextElement(&iter)) != NULL){
+	// 	Process* tmpName = (Process*)elem;
+	// 	printf("%d %d %d %d", tmpName->start_time, tmpName->process_id, tmpName->run_time, tmpName->num_exchanges);
+  //     ListIterator iter2 = createIterator(tmpName->exchanges);
+  //     while((elem2 = nextElement(&iter2)) != NULL) {
+  //       int* tmpName2 = (int*)elem2;
+  //       printf(" %d", *tmpName2);
+  //     }
+  //     printf("\n");
+	// }
 
 
   int newsize = getLength(new_queue);
@@ -244,6 +244,7 @@ void dispatcher(FILE *fd, int harddrive){
         //pcpu->p->run_time -= pcpu->time;
         //printf("correct\n");
         deleteDataFromList(pcpu->p->exchanges, tmpi);
+        intdelete((void*)tmpi);
         (pcpu->p->num_exchanges)--;
         insertBack(blocked_queue, pcpu->p);
         if ((tmpp = getFromFront(ready_queue)) != NULL) {
