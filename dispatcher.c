@@ -13,9 +13,13 @@ Dispatch Algorithm : SRT
 
 #define MAX_LINE_LENGTH 100
 
+/*
+  Linked list API from CIS2750
+*/
 #include "LinkedListAPI.h"
 
 int hrd;
+
 
 struct Process {
   int start_time;
@@ -38,11 +42,26 @@ struct hdd {
   Process *p;
 } typedef hdd;
 
+
+/*
+  Linked list functions
+*/
 char *dummyprint(void *toBePrinted) {
   return NULL;
 }
 
 void dummydelete(void *toBeDeleted) {
+  return;
+}
+
+void pdelete(Process *toBeDeleted) {
+  void *elem;
+  ListIterator iter = createIterator(toBeDeleted->exchanges);
+	while ((elem = nextElement(&iter)) != NULL){
+		int* tmpName = (int*)elem;
+		free(tmpName);
+	}
+  free(toBeDeleted);
   return;
 }
 
@@ -78,18 +97,7 @@ int intCmp(const void *c1, const void *c2) {
   return 1;
 }
 
-void incrementR(List *list) {
-  if (list == NULL) {
-    return;
-  }
-  void *elem2;
-  ListIterator iter2 = createIterator(list);
-  while((elem2 = nextElement(&iter2)) != NULL) {
-    Process* tmpName2 = (Process*)elem2;
-    (tmpName2->t_runtime)++;
-  }
-}
-
+/*functions to increment all elements of a list*/
 void incrementRdy(List *list) {
   if (list == NULL) {
     return;
@@ -121,7 +129,7 @@ void dispatcher(FILE *fd, int harddrive){
     */
     hrd = harddrive;
     char line_buffer[MAX_LINE_LENGTH];
-    int start_time, run_time, process_id, num_exchanges, exchange_time;
+    int start_time, run_time, process_id, num_exchanges;
     char *token;
     List *new_queue, *ready_queue, *blocked_queue, *finished;
     new_queue = initializeList(dummyprint, dummydelete, processCmp);
@@ -151,17 +159,18 @@ void dispatcher(FILE *fd, int harddrive){
       num_exchanges = 0;
       token = strtok(NULL, " ");
       while ( token != NULL ){
-          num_exchanges += sscanf(token, "%d",&exchange_time);
-          insertBack(newp->exchanges, &exchange_time);
-          token = strtok(NULL, " ");
+        int *exchange_time = malloc(sizeof(int));
+        num_exchanges += sscanf(token, "%d",exchange_time);
+        insertBack(newp->exchanges, exchange_time);
+        token = strtok(NULL, " ");
       }
       newp->num_exchanges = num_exchanges;
      //printf("Process %3d wants to start at %6dms and run for %6dms and has %3d hard drive exchanges\n",  process_id, start_time, run_time, num_exchanges);
      insertBack(new_queue, newp);
   }
 
-  // void *elem, *elem2;
-  //
+  //void *elem, *elem2;
+
 	// ListIterator iter = createIterator(new_queue);
 	// while ((elem = nextElement(&iter)) != NULL){
 	// 	Process* tmpName = (Process*)elem;
@@ -181,49 +190,24 @@ void dispatcher(FILE *fd, int harddrive){
   Process *p0 = malloc(sizeof(Process));
   p0->process_id = 0;
   p0->t_runtime = 0;
+  p0->run_time = -1;
 
   cpu *pcpu = malloc(sizeof(cpu));
   hdd *phdd = malloc(sizeof(hdd));
   pcpu->p = p0;
   pcpu->time = 0;
+  phdd->p = NULL;
   Process *tmpp;
   int *tmpi;
-  for (int time = 0; getLength(finished) != newsize; time++) {
-    if(pcpu->p->process_id != 0) {
-      if (pcpu->time - pcpu->p->run_time == 0) {
-        pcpu->p->t_runtime += pcpu->time;
-        //printf("%d finished\n", pcpu->p->process_id);
-        insertBack(finished, pcpu->p);
-        if ((tmpp = getFromFront(ready_queue)) != NULL) {
-          pcpu->p = tmpp;
-          pcpu->time = 0;
-          deleteDataFromList(ready_queue, tmpp);
-        } else {
-          pcpu->p = p0;
-          pcpu->time = 0;
-        }
-      } else if ((tmpi = getFromFront(pcpu->p->exchanges)) != NULL && (pcpu->p->t_runtime)+(pcpu->time) == *tmpi) {
-        pcpu->p->t_runtime += pcpu->time;
-        pcpu->p->run_time -= pcpu->time;
-        //printf("correct\n");
-        deleteDataFromList(pcpu->p->exchanges, tmpi);
-        (pcpu->p->num_exchanges)--;
-        insertBack(blocked_queue, pcpu->p);
-        if ((tmpp = getFromFront(ready_queue)) != NULL) {
-          pcpu->p = tmpp;
-          pcpu->time = 0;
-          deleteDataFromList(ready_queue, tmpp);
-        } else {
-          pcpu->p = p0;
-          pcpu->time = 0;
-        }
-      }
-    }
 
+  //Main simuation loop
+  for (int time = 0; getLength(finished) != newsize; time++) {
+
+    //handle if harddrive request complete
     if (phdd->p != NULL && phdd->time == harddrive) {
       phdd->p->t_blockedtime += harddrive;
-      pcpu->p->t_runtime += pcpu->time;
-      pcpu->p->run_time -= pcpu->time;
+      //pcpu->p->t_runtime += pcpu->time;
+      //pcpu->p->run_time -= pcpu->time;
       pcpu->time = 0;
       if (pcpu->p->process_id == 0) {
         pcpu->p = phdd->p;
@@ -236,16 +220,48 @@ void dispatcher(FILE *fd, int harddrive){
       phdd->p = NULL;
     }
 
+
+    if(pcpu->p->process_id != 0) {
+      if ((tmpi = getFromFront(pcpu->p->exchanges)) != NULL && (pcpu->p->t_runtime) == *tmpi) {
+        //pcpu->p->t_runtime += pcpu->time;
+        //pcpu->p->run_time -= pcpu->time;
+        //printf("correct\n");
+        deleteDataFromList(pcpu->p->exchanges, tmpi);
+        (pcpu->p->num_exchanges)--;
+        insertBack(blocked_queue, pcpu->p);
+        if ((tmpp = getFromFront(ready_queue)) != NULL) {
+          pcpu->p = tmpp;
+          pcpu->time = 0;
+          deleteDataFromList(ready_queue, tmpp);
+        } else {
+          pcpu->p = p0;
+          pcpu->time = 0;
+        }
+      } else if (pcpu->p->run_time == 0) {
+        //pcpu->p->t_runtime += pcpu->time;
+        //printf("%d finished\n", pcpu->p->process_id);
+        insertBack(finished, pcpu->p);
+        if ((tmpp = getFromFront(ready_queue)) != NULL) {
+          pcpu->p = tmpp;
+          pcpu->time = 0;
+          deleteDataFromList(ready_queue, tmpp);
+        } else {
+          pcpu->p = p0;
+          pcpu->time = 0;
+        }
+      }
+    }
+
     if ((tmpp = getFromFront(new_queue)) != NULL) {
       if (tmpp->start_time == time) {
         if (pcpu->p->process_id == 0) {
-          pcpu->p->t_runtime += pcpu->time;
-          pcpu->p->run_time -= pcpu->time;
+          //pcpu->p->t_runtime += pcpu->time;
+          //pcpu->p->run_time -= pcpu->time;
           pcpu->p = tmpp;
           pcpu->time = 0;
         } else if (processCmp(tmpp, pcpu->p) <= 0) {
-          pcpu->p->t_runtime += pcpu->time;
-          pcpu->p->run_time -= pcpu->time;
+          //pcpu->p->t_runtime += pcpu->time;
+          //pcpu->p->run_time -= pcpu->time;
           insertSorted(ready_queue, pcpu->p);
           pcpu->p = tmpp;
           pcpu ->time = 0;
@@ -265,11 +281,19 @@ void dispatcher(FILE *fd, int harddrive){
     }
 
     pcpu->time ++;
+    if (pcpu->p->run_time == 0) {
+      (pcpu->p->run_time)++;
+      (pcpu->p->t_runtime)--;
+    }
+    (pcpu->p->run_time)--;
+    (pcpu->p->t_runtime)++;
     phdd->time ++;
     incrementRdy(ready_queue);
     incrementB(blocked_queue);
     //printf("%d %d %d\n", pcpu->p->process_id, pcpu->p->t_runtime, time);
   }
+
+  p0->t_runtime--;
 
   printf("%d %d\n", p0->process_id, p0->t_runtime);
   iter = createIterator(finished);
@@ -277,4 +301,6 @@ void dispatcher(FILE *fd, int harddrive){
 		Process* tmpName = (Process*)elem;
 		printf("%d %d %d %d\n", tmpName->process_id, tmpName->t_runtime, tmpName->t_readytime, tmpName->t_blockedtime);
 	}
+
+
 }
