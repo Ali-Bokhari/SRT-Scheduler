@@ -67,12 +67,6 @@ void pdelete(Process *toBeDeleted) {
   }
   //void *elem;
   if(toBeDeleted->exchanges != NULL) {
-    // ListIterator iter = createIterator(toBeDeleted->exchanges);
-  	// while ((elem = nextElement(&iter)) != NULL){
-  	// 	int* tmpName = (int*)elem;
-    //   printf("freed %d\n", *tmpName);
-  	// 	free(tmpName);
-  	// }
     freeList(toBeDeleted->exchanges);
   }
   free(toBeDeleted);
