@@ -56,11 +56,13 @@ void dummydelete(void *toBeDeleted) {
 
 void pdelete(Process *toBeDeleted) {
   void *elem;
-  ListIterator iter = createIterator(toBeDeleted->exchanges);
-	while ((elem = nextElement(&iter)) != NULL){
-		int* tmpName = (int*)elem;
-		free(tmpName);
-	}
+  if(toBeDeleted->exchanges != NULL) {
+    ListIterator iter = createIterator(toBeDeleted->exchanges);
+  	while ((elem = nextElement(&iter)) != NULL){
+  		int* tmpName = (int*)elem;
+  		free(tmpName);
+  	}
+  }
   free(toBeDeleted);
   return;
 }
@@ -296,11 +298,16 @@ void dispatcher(FILE *fd, int harddrive){
   p0->t_runtime--;
 
   printf("%d %d\n", p0->process_id, p0->t_runtime);
+  pdelete(p0);
   iter = createIterator(finished);
 	while ((elem = nextElement(&iter)) != NULL){
 		Process* tmpName = (Process*)elem;
 		printf("%d %d %d %d\n", tmpName->process_id, tmpName->t_runtime, tmpName->t_readytime, tmpName->t_blockedtime);
+    pdelete(tmpName);
 	}
 
-
+  freeList(new_queue);
+  freeList(ready_queue);
+  freeList(blocked_queue);
+  freeList(finished);
 }
